@@ -1,5 +1,6 @@
 import numpy as np
-import pong as p
+import pong
+import gui
 
 I = 6 # input variables
 H = 1 # number of neurons in hidden-layer
@@ -29,10 +30,12 @@ episode_number = 0
 
 steps = 0
 
-g = p.Pong()
+g = pong.Pong()
+d = gui.PongGui(g)
+
 state = g.get_state()
 
-while episode_number < 100:
+while episode_number < 10:
 
     # print(state)
 
@@ -43,12 +46,17 @@ while episode_number < 100:
 
     observation, reward, over = g.step(action)
 
+    d.render()
+    d.clock.tick(50)
+
     steps += 1
 
     if over:
         episode_number += 1
         print(reward, steps)
         steps = 0
-        g = p.Pong()
+        g = pong.Pong()
         state = g.get_state()
-
+        d = gui.PongGui(g)
+        M1 = np.random.randn(H,I) / np.sqrt(I)
+        M2 = np.random.randn(H) / np.sqrt(H)
