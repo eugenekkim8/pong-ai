@@ -4,7 +4,7 @@ import pong as p
 I = 6 # input variables
 H = 1 # number of neurons in hidden-layer
 
-# Matrix representations of models, using Xavier initialization
+# Matrix representations of NN, using Xavier initialization
 # https://prateekvjoshi.com/2016/03/29/understanding-xavier-initialization-in-deep-neural-networks/
 M1 = np.random.randn(H,I) / np.sqrt(I)
 M2 = np.random.randn(H) / np.sqrt(H)
@@ -27,6 +27,8 @@ def backprop():
 
 episode_number = 0
 
+steps = 0
+
 g = p.Pong()
 state = g.get_state()
 
@@ -34,13 +36,19 @@ while episode_number < 100:
 
     # print(state)
 
-    p, h = forward(state)
+    prob, h = forward(state)
     # print(p)
 
-    action = 'u' if np.random.uniform() < p else 'd'
+    action = 'u' if np.random.uniform() < prob else 'd'
 
     observation, reward, over = g.step(action)
 
+    steps += 1
+
     if over:
         episode_number += 1
-        print(reward)
+        print(reward, steps)
+        steps = 0
+        g = p.Pong()
+        state = g.get_state()
+
