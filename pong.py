@@ -26,7 +26,6 @@ class Ball(Sprite):
         self.y += self.dy
 
     def adjust_angle(self, angle_degrees):
-        # print(angle_degrees)
         if angle_degrees % 90 == 0:
             raise Exception("Ball can't travel vertically.")
         self.dy = self.dx * math.tan(angle_degrees / 180.0 * math.pi)
@@ -51,27 +50,30 @@ class Pong:
     # Paddle 1 is automatic, following self.P1_method
     # Paddle 2 takes user input. 
 
-    WIDTH = 160
+    WIDTH = 300
     HEIGHT = 210
 
     BALL_SIZE = 10
-    BALL_DX = WIDTH / 1.5 / 100
+    BALL_DX = WIDTH / 100
 
-    PADDLE_WIDTH = 10
+    PADDLE_WIDTH = 4
     PADDLE_HEIGHT = HEIGHT / 6
 
-    PADDLE1_DY = PADDLE2_DY = HEIGHT * 2 / 100
+    PADDLE1_DY = PADDLE2_DY = HEIGHT / 100
 
     # Rewards
     HIT_BALL = 1
     WIN_GAME = 20
 
+    # Game-tracking variables
+    reward, episode_over = 0, False
+
     # P1 methods
     def follow(self):
         distance_between_centers = self.P1.y + self.P1.h / 2 - self.B.y + self.B.h / 2
-        if distance_between_centers > self.P1.dy:
+        if distance_between_centers > self.P1.dy and self.P1.y > 0:
             self.P1.move(moveUp = True)
-        elif distance_between_centers < -1 * self.P1.dy:
+        elif distance_between_centers < -1 * self.P1.dy and self.P1.y < self.HEIGHT - self.B.h:
             self.P1.move(moveUp = False)
 
     def __init__(self, P1_method = follow):
@@ -89,7 +91,8 @@ class Pong:
         """ Returns observation, reward, episode_over """
 
         obs = self.get_state()
-        reward, episode_over = self.check_collisions()
+        
+        self.check_collisions()
 
         ### Move ball.
         self.B.move()
@@ -98,36 +101,32 @@ class Pong:
         self.P1_method(self)
         self.act(action)
 
-        return (obs, reward, episode_over)
+        return (obs, self.reward, self.episode_over)
 
     def get_state(self):
         return (self.P1.y, self.P2.y, self.B.x, self.B.y, self.B.dx, self.B.dy)
 
     def check_collisions(self):
-        reward, episode_over = 0, False
 
         # Walls
         if self.B.collide(self.WALL_L):
-            reward += self.WIN_GAME # P2 wins
-            episode_over = True
+            self.reward += self.WIN_GAME # P2 wins
+            self.episode_over = True
         elif self.B.collide(self.WALL_R):
-            reward -= self.WIN_GAME # P1 wins
-            episode_over = True
+            self.reward -= self.WIN_GAME # P1 wins
+            self.episode_over = True
 
-        if self.B.collide(self.WALL_U) or self.B.collide(self.WALL_D):
+        if not (0 < self.B.y < self.HEIGHT - self.B.h):
             self.B.dy *= -1
 
         # Paddles
         if self.B.collide(self.P1):
-            self.B.dx *= -1
+            self.B.dx = abs(self.B.dx)
             self.B.adjust_angle(self.P1.get_post_collision_angle(self.B, left_side = False))
-            reward -= self.HIT_BALL
         elif self.B.collide(self.P2):
-            self.B.dx *= -1
+            self.B.dx = -1 * abs(self.B.dx)
             self.B.adjust_angle(self.P2.get_post_collision_angle(self.B, left_side = True))
-            reward += self.HIT_BALL
-
-        return reward, episode_over
+            self.reward += self.HIT_BALL
 
     def act(self, action):
         if action == 'u' and not self.P2.collide(self.WALL_U):
@@ -138,4 +137,3 @@ class Pong:
     def render(self):
         print(self.get_state())
         pass
-
