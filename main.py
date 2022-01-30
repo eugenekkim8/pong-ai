@@ -3,7 +3,7 @@ import pong
 import gui
 
 I = 6 # input variables
-H = 1 # number of neurons in hidden-layer
+H = 3 # number of neurons in hidden layer
 
 # Matrix representations of NN, using Xavier initialization
 # https://prateekvjoshi.com/2016/03/29/understanding-xavier-initialization-in-deep-neural-networks/
